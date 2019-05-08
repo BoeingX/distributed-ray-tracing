@@ -1,18 +1,9 @@
-SETUP = sallesinfo# possibilities: sallesinfo, arch, windows
 CC = mpic++
 CFLAGS = -c -O2
-ifeq ($(SETUP),sallesinfo)
-	## salles informatiques @X
-	INCLUDE = -I/usr/local/CImg-1.6.2/
-	LIBS = -lpthread -lX11
-	LDPATH = 
-endif
-ifeq ($(SETUP),arch)
-	HOME =
-	INCLUDE =
-	LDFLAGS=-L/usr/X11R6/lib
-	LIBS=-lm -lpthread -lX11
-endif
+HOME =
+INCLUDE =
+LDFLAGS=-L/usr/X11R6/lib
+LIBS=-lm -lpthread -lX11
 
 SOURCES=Camera.cpp Color.cpp Light.cpp main.cpp Ray.cpp Scene.cpp Sphere.cpp Tracing.cpp Vector.cpp Plane.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
