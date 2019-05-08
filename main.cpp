@@ -1,4 +1,3 @@
-#include <mpi.h>
 #include <iostream>
 #include "Vector.h"
 #include "Vector.h"
@@ -11,9 +10,6 @@
 #include <iostream>
 
 using namespace cimg_library;
-//Il ne faut pas mettre mpi.h à la fin des include, sinon une erreur
-// /usr/include/openmpi/ompi/mpi/cxx/mpicxx.h:188:9: erreur: expected identifier before ‘int’ class Status;
-//se produit
 
 //some constants
 //focus_length is the distance between the screen and the camera
@@ -120,78 +116,9 @@ void testExtreme(){
     camera.toImg(resolution_h, resolution_v, depth, saveImg, "Ray_tracing_extreme");
 }
 
-//testMPI
-void testMPI(int argc, char *argv[]){
-    MPI_Init(&argc, &argv);
-    int p;
-    MPI_Comm_size(MPI_COMM_WORLD, &p);
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-    Scene scene(Vector(0,0,0), width, height, distance_to_screen);
-
-    std::vector<Light> light;
-    light.push_back(Light(Vector(10,0,10)));
-    //light.push_back(Light(Vector(5,0,5),Color(255,0,0),Color(255,0,0)));
-    //light.push_back(Light(Vector(0,0,8)));
-
-    int n;
-    bool saveImg;
-
-    if(rank == 0){
-        std::cout<<"Do you want to save image(0/1)?"<<std::endl;
-        std::cin>>saveImg;
-        std::cout<<"How many balls do you want?"<<std::endl;
-        std::cin>>n;
-    }
-
-    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-    double* x = new double[n]; double* y = new double[n]; double* z = new double[n];
-    unsigned short* r = new unsigned short[n]; unsigned short* g = new unsigned short[n]; unsigned short* b = new unsigned short[n];
-    double* radius = new double[n];
-
-    if(rank==0){
-        scene.addSphereOnGround(n, eye, width, height);
-        for(int i = 0; i < n; i++){
-            x[i] = scene.getScene()[i].getCenter().getX();
-            y[i] = scene.getScene()[i].getCenter().getY();
-            z[i] = scene.getScene()[i].getCenter().getZ();
-            r[i] = scene.getScene()[i].getRed();
-            g[i] = scene.getScene()[i].getGreen();
-            b[i] = scene.getScene()[i].getBlue();
-            radius[i] = scene.getScene()[i].getRadius();
-        }
-    }
-
-    MPI_Bcast(x, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(y, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(z, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(r, n, MPI_UNSIGNED_SHORT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(g, n, MPI_UNSIGNED_SHORT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(b, n, MPI_UNSIGNED_SHORT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(radius,n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-    if(rank != 0) {
-        for (int i = 0; i < n; i++) {
-            Sphere toAdd(Vector(x[i], y[i], z[i]), radius[i], Color(r[i], g[i], b[i]));
-            scene.addSphere(toAdd);
-        }
-    }
-
-    ray_trace_mpi(camera, scene, light);
-
-    if(rank == 0)
-        camera.toImg(resolution_h, resolution_v, depth, saveImg, "Ray_tracing_mpi");
-
-    delete[] r,g,b,x,y,z,radius;
-
-    MPI_Finalize();
-}
-
 int main(int argc, char *argv[]){
     if(argc != 2)
-        testMPI(argc, argv);
+        test1();
     else if(strcmp(argv[1],"test1")==0)
         test1();
     else if(strcmp(argv[1],"test2")==0)
